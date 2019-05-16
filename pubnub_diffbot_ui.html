@@ -1,17 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-	<title>Diffbot Demo</title>
-  <script src="https://cdn.pubnub.com/pubnub-3.15.1.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
-  <script src="https://cdn.pubnub.com/sdk/pubnub-angular/pubnub-angular-3.2.1.min.js"></script>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.5.0.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+  <script src="https://cdn.pubnub.com/sdk/pubnub-angular/pubnub-angular-4.0.2.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
 </head>
 <body>
-
-	<div class="container" ng-app="PubNubAngularApp" ng-controller="MyTextCtrl">
+<div class="container" ng-app="PubNubAngularApp" ng-controller="MyTextCtrl">
 
 <pre>
 NOTE: make sure to update the PubNub keys below with your keys,
@@ -39,7 +37,34 @@ and ensure that the text analysis BLOCK is configured properly!
 
 </div>
 
-
-
+<script>
+angular.module('PubNubAngularApp', ["pubnub.angular.service"])
+.controller('MyTextCtrl', function($rootScope, $scope, Pubnub) {
+  $scope.messages  = [];
+  $scope.channel   = 'diffbot-channel';
+  if (!$rootScope.initialized) {
+    Pubnub.init({
+      publishKey: 'pub-c-82d8faf9-8a93-4b06-ad8b-fbd5f794a399',
+      subscribeKey: 'sub-c-80a44e3c-7824-11e9-81d5-56c3556875f9',
+      ssl:true
+    });
+    $rootScope.initialized = true;
+  }
+  var msgCallback = function(payload) {
+    $scope.$apply(function() {
+      $scope.messages.unshift(payload);
+    });
+  };
+  $scope.publish = function() {
+    Pubnub.publish({
+      channel: $scope.channel,
+      message: {url:$scope.toSend}
+    });
+    $scope.toSend = "";
+  };
+  Pubnub.subscribe({ channels: [$scope.channel] });
+  Pubnub.addListener({ message: msgCallback });
+});
+</script>
 </body>
 </html>
